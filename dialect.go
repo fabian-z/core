@@ -253,6 +253,16 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 			sql += " ), "
 		}
 
+		for fkColLoc, fkColumn := range table.ForeignKeys {
+			indexName := b.dialect.Quote("FK_" + tableName + "_" + fkColLoc)
+			fkColLocQuoted := b.dialect.Quote(fkColLoc)
+			fkColName := b.dialect.Quote(fkColumn.Name)
+			fkColTable := b.dialect.Quote(fkColumn.TableName)
+			sql += "INDEX " + indexName + " (" + fkColLocQuoted + "), "
+			sql += "FOREIGN KEY (" + fkColLocQuoted + ") REFERENCES " + fkColTable + "(" + fkColName + ") "
+			sql += "ON UPDATE CASCADE ON DELETE RESTRICT, "
+		}
+
 		sql = sql[:len(sql)-2]
 	}
 	sql += ")"

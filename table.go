@@ -13,6 +13,7 @@ type Table struct {
 	columnsMap    map[string][]*Column
 	columns       []*Column
 	Indexes       map[string]*Index
+	ForeignKeys   map[string]*Column
 	PrimaryKeys   []string
 	AutoIncrement string
 	Created       map[string]bool
@@ -42,6 +43,7 @@ func NewTable(name string, t reflect.Type) *Table {
 		columns:     make([]*Column, 0),
 		columnsMap:  make(map[string][]*Column),
 		Indexes:     make(map[string]*Index),
+		ForeignKeys: make(map[string]*Column),
 		Created:     make(map[string]bool),
 		PrimaryKeys: make([]string, 0),
 	}
