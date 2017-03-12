@@ -152,8 +152,8 @@ func (table *Table) AddIndex(index *Index) {
 }
 
 type ForeignKey struct {
-	ColumnName []string
-	TargetTable string
+	ColumnName   []string
+	TargetTable  string
 	TargetColumn []string
 	UpdateAction string
 	DeleteAction string
