@@ -13,7 +13,7 @@ type Table struct {
 	columnsMap    map[string][]*Column
 	columns       []*Column
 	Indexes       map[string]*Index
-	ForeignKeys   map[string]*Column
+	ForeignKeys   []ForeignKey
 	PrimaryKeys   []string
 	AutoIncrement string
 	Created       map[string]bool
@@ -43,7 +43,6 @@ func NewTable(name string, t reflect.Type) *Table {
 		columns:     make([]*Column, 0),
 		columnsMap:  make(map[string][]*Column),
 		Indexes:     make(map[string]*Index),
-		ForeignKeys: make(map[string]*Column),
 		Created:     make(map[string]bool),
 		PrimaryKeys: make([]string, 0),
 	}
@@ -150,4 +149,12 @@ func (table *Table) AddColumn(col *Column) {
 // add an index or an unique to table
 func (table *Table) AddIndex(index *Index) {
 	table.Indexes[index.Name] = index
+}
+
+type ForeignKey struct {
+	ColumnName []string
+	TargetTable string
+	TargetColumn []string
+	UpdateAction string
+	DeleteAction string
 }

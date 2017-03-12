@@ -253,14 +253,40 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 			sql += " ), "
 		}
 
-		for fkColLoc, fkColumn := range table.ForeignKeys {
-			indexName := b.dialect.Quote("FK_" + tableName + "_" + fkColLoc)
-			fkColLocQuoted := b.dialect.Quote(fkColLoc)
-			fkColName := b.dialect.Quote(fkColumn.Name)
-			fkColTable := b.dialect.Quote(fkColumn.TableName)
+		for _, fk := range table.ForeignKeys {
+			indexName := b.dialect.Quote("FK_" + tableName + "_" + fk.ColumnName[0])
+
+			var fkColLocQuoted string
+			for _, v := range fk.ColumnName {
+				fkColLocQuoted = b.dialect.Quote(v)  + ", "
+			}
+			fkColLocQuoted = strings.TrimSuffix(fkColLocQuoted, ", ")
+
+			var fkColName string
+			for _, v := range fk.TargetColumn {
+				fkColName = b.dialect.Quote(v)  + ", "
+			}
+			fkColName = strings.TrimSuffix(fkColName, ", ")
+
+			fkColTable := b.dialect.Quote(fk.TargetTable)
+
+			var fkUpdate string
+			if fk.UpdateAction != "" {
+				fkUpdate = fk.UpdateAction
+			} else {
+				fkUpdate = "CASCADE"
+			}
+
+			var fkDelete string
+			if fk.DeleteAction != "" {
+				fkDelete = fk.DeleteAction
+			} else {
+				fkDelete = "RESTRICT"
+			}
+
 			sql += "INDEX " + indexName + " (" + fkColLocQuoted + "), "
 			sql += "FOREIGN KEY (" + fkColLocQuoted + ") REFERENCES " + fkColTable + "(" + fkColName + ") "
-			sql += "ON UPDATE CASCADE ON DELETE RESTRICT, "
+			sql += "ON UPDATE "+fkUpdate+" ON DELETE "+fkDelete+", "
 		}
 
 		sql = sql[:len(sql)-2]
