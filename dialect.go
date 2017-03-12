@@ -230,6 +230,8 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		tableName = table.Name
 	}
 
+	var indexSql string
+
 	sql += b.dialect.Quote(tableName)
 	sql += " ("
 
@@ -284,7 +286,10 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 				fkDelete = "RESTRICT"
 			}
 
-			sql += "INDEX " + indexName + " (" + fkColLocQuoted + "), "
+			if len(indexSql) == 0 {
+				indexSql += "\n"
+			}
+			indexSql += "CREATE INDEX "+indexName+" ON "+b.dialect.Quote(tableName)+"("+fkColLocQuoted+");\n"
 			sql += "FOREIGN KEY (" + fkColLocQuoted + ") REFERENCES " + fkColTable + "(" + fkColName + ") "
 			sql += "ON UPDATE "+fkUpdate+" ON DELETE "+fkDelete+", "
 		}
@@ -292,6 +297,9 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		sql = sql[:len(sql)-2]
 	}
 	sql += ")"
+	if len(indexSql) != 0 {
+		indexSql = ";"+indexSql[:len(indexSql)-1]
+	}
 
 	if b.dialect.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
@@ -305,7 +313,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		}
 	}
 
-	return sql
+	return sql+indexSql
 }
 
 func (b *Base) ForUpdateSql(query string) string {
