@@ -69,7 +69,7 @@ type Dialect interface {
 	//CreateTableIfNotExists(table *Table, tableName, storeEngine, charset string) error
 	//MustDropTable(tableName string) error
 
-	GetColumns(tableName string) ([]string, map[string]*Column, error)
+	GetColumns(tableName string) ([]string, map[string]*Column, []ForeignKey, error)
 	GetTables() ([]*Table, error)
 	GetIndexes(tableName string) (map[string]*Index, error)
 
