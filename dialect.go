@@ -61,8 +61,8 @@ type Dialect interface {
 	DropTableSql(tableName string) string
 	CreateIndexSql(tableName string, index *Index) string
 	DropIndexSql(tableName string, index *Index) string
-	CreateForeignKeySql(tableName string, index *Index) string
-	DropForeignKeySql(tableName string, index *Index) string
+	CreateForeignKeySql(tableName string, foreignKey *ForeignKey) string
+	DropForeignKeySql(tableName string, foreignKey *ForeignKey) string
 
 	ModifyColumnSql(tableName string, col *Column) string
 
@@ -71,7 +71,7 @@ type Dialect interface {
 	//CreateTableIfNotExists(table *Table, tableName, storeEngine, charset string) error
 	//MustDropTable(tableName string) error
 
-	GetColumns(tableName string) ([]string, map[string]*Column, []ForeignKey, error)
+	GetColumns(tableName string) ([]string, map[string]*Column, []*ForeignKey, error)
 	GetTables() ([]*Table, error)
 	GetIndexes(tableName string) (map[string]*Index, error)
 
@@ -221,20 +221,19 @@ func (db *Base) DropIndexSql(tableName string, index *Index) string {
 	return fmt.Sprintf("DROP INDEX %v ON %s", quote(name), quote(tableName))
 }
 
-
 func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) string {
 	quote := db.dialect.Quote
 	constraintName := quote("FK_" + tableName + "_" + foreignKey.ColumnName[0])
 
 	var fkColLocQuoted string
 	for _, v := range foreignKey.ColumnName {
-		fkColLocQuoted = quote(v)  + ", "
+		fkColLocQuoted = quote(v) + ", "
 	}
 	fkColLocQuoted = strings.TrimSuffix(fkColLocQuoted, ", ")
 
 	var fkColName string
 	for _, v := range foreignKey.TargetColumn {
-		fkColName = quote(v)  + ", "
+		fkColName = quote(v) + ", "
 	}
 	fkColName = strings.TrimSuffix(fkColName, ", ")
 

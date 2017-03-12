@@ -13,7 +13,7 @@ type Table struct {
 	columnsMap    map[string][]*Column
 	columns       []*Column
 	Indexes       map[string]*Index
-	ForeignKeys   []ForeignKey
+	ForeignKeys   []*ForeignKey
 	PrimaryKeys   []string
 	AutoIncrement string
 	Created       map[string]bool
