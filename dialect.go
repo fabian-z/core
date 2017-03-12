@@ -61,6 +61,8 @@ type Dialect interface {
 	DropTableSql(tableName string) string
 	CreateIndexSql(tableName string, index *Index) string
 	DropIndexSql(tableName string, index *Index) string
+	CreateForeignKeySql(tableName string, index *Index) string
+	DropForeignKeySql(tableName string, index *Index) string
 
 	ModifyColumnSql(tableName string, col *Column) string
 
@@ -219,6 +221,49 @@ func (db *Base) DropIndexSql(tableName string, index *Index) string {
 	return fmt.Sprintf("DROP INDEX %v ON %s", quote(name), quote(tableName))
 }
 
+
+func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) string {
+	quote := db.dialect.Quote
+	constraintName := quote("FK_" + tableName + "_" + foreignKey.ColumnName[0])
+
+	var fkColLocQuoted string
+	for _, v := range foreignKey.ColumnName {
+		fkColLocQuoted = quote(v)  + ", "
+	}
+	fkColLocQuoted = strings.TrimSuffix(fkColLocQuoted, ", ")
+
+	var fkColName string
+	for _, v := range foreignKey.TargetColumn {
+		fkColName = quote(v)  + ", "
+	}
+	fkColName = strings.TrimSuffix(fkColName, ", ")
+
+	fkColTable := quote(foreignKey.TargetTable)
+
+	var fkUpdate string
+	if foreignKey.UpdateAction != "" {
+		fkUpdate = foreignKey.UpdateAction
+	} else {
+		fkUpdate = "CASCADE"
+	}
+
+	var fkDelete string
+	if foreignKey.DeleteAction != "" {
+		fkDelete = foreignKey.DeleteAction
+	} else {
+		fkDelete = "RESTRICT"
+	}
+
+	return fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s",
+		tableName, constraintName, fkColLocQuoted, fkColTable, fkColName, fkUpdate, fkDelete)
+}
+
+func (db *Base) DropForeignKeySql(tableName string, foreignKey *ForeignKey) string {
+	quote := db.dialect.Quote
+	constraintName := quote("FK_" + tableName + "_" + foreignKey.ColumnName[0])
+	return fmt.Sprintf("ALTER TABLE %s DROP FOREIGN KEY %s;", quote(tableName), constraintName)
+}
+
 func (db *Base) ModifyColumnSql(tableName string, col *Column) string {
 	return fmt.Sprintf("alter table %s MODIFY COLUMN %s", tableName, col.StringNoPk(db.dialect))
 }
@@ -229,8 +274,6 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 	if tableName == "" {
 		tableName = table.Name
 	}
-
-	var indexSql string
 
 	sql += b.dialect.Quote(tableName)
 	sql += " ("
@@ -255,51 +298,9 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 			sql += " ), "
 		}
 
-		for _, fk := range table.ForeignKeys {
-			indexName := b.dialect.Quote("FK_" + tableName + "_" + fk.ColumnName[0])
-
-			var fkColLocQuoted string
-			for _, v := range fk.ColumnName {
-				fkColLocQuoted = b.dialect.Quote(v)  + ", "
-			}
-			fkColLocQuoted = strings.TrimSuffix(fkColLocQuoted, ", ")
-
-			var fkColName string
-			for _, v := range fk.TargetColumn {
-				fkColName = b.dialect.Quote(v)  + ", "
-			}
-			fkColName = strings.TrimSuffix(fkColName, ", ")
-
-			fkColTable := b.dialect.Quote(fk.TargetTable)
-
-			var fkUpdate string
-			if fk.UpdateAction != "" {
-				fkUpdate = fk.UpdateAction
-			} else {
-				fkUpdate = "CASCADE"
-			}
-
-			var fkDelete string
-			if fk.DeleteAction != "" {
-				fkDelete = fk.DeleteAction
-			} else {
-				fkDelete = "RESTRICT"
-			}
-
-			if len(indexSql) == 0 {
-				indexSql += "\n"
-			}
-			indexSql += "CREATE INDEX "+indexName+" ON "+b.dialect.Quote(tableName)+"("+fkColLocQuoted+");\n"
-			sql += "FOREIGN KEY (" + fkColLocQuoted + ") REFERENCES " + fkColTable + "(" + fkColName + ") "
-			sql += "ON UPDATE "+fkUpdate+" ON DELETE "+fkDelete+", "
-		}
-
 		sql = sql[:len(sql)-2]
 	}
 	sql += ")"
-	if len(indexSql) != 0 {
-		indexSql = ";"+indexSql[:len(indexSql)-1]
-	}
 
 	if b.dialect.SupportEngine() && storeEngine != "" {
 		sql += " ENGINE=" + storeEngine
@@ -313,7 +314,7 @@ func (b *Base) CreateTableSql(table *Table, tableName, storeEngine, charset stri
 		}
 	}
 
-	return sql+indexSql
+	return sql
 }
 
 func (b *Base) ForUpdateSql(query string) string {
