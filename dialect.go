@@ -260,7 +260,7 @@ func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) st
 	}
 
 	return fmt.Sprintf("ALTER TABLE %s ADD CONSTRAINT %s FOREIGN KEY (%s) REFERENCES %s(%s) ON UPDATE %s ON DELETE %s",
-		tableName, constraintName, fkColLocQuoted, fkColTable, fkColName, fkUpdate, fkDelete)
+		quote(tableName), constraintName, fkColLocQuoted, fkColTable, fkColName, fkUpdate, fkDelete)
 }
 
 func (db *Base) DropForeignKeySql(tableName string, foreignKey *ForeignKey) string {
