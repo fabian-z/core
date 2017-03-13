@@ -1,6 +1,10 @@
 package core
 
 import (
+	"bytes"
+	"encoding/base64"
+	"encoding/gob"
+	"hash/fnv"
 	"sort"
 )
 
@@ -45,4 +49,34 @@ func (fk *ForeignKey) Equal(dst *ForeignKey) bool {
 	}
 
 	return true
+}
+
+func (fk *ForeignKey) Name(tableName string) (index string, constraint string) {
+
+	base := tableName + "_" + fk.ColumnName[0] + "_"
+
+	hashStruct := struct {
+		tn string
+		fk ForeignKey
+	}{
+		tableName,
+		*fk,
+	}
+
+	var encodeBuf bytes.Buffer
+	enc := gob.NewEncoder(&encodeBuf)
+	err := enc.Encode(hashStruct)
+	if err != nil {
+		panic(err)
+	}
+
+	h := fnv.New32a()
+	h.Write([]byte(encodeBuf.Bytes()))
+	hash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+
+	index = "FK_IDX_" + base + hash
+	constraint = "FK_" + base + hash
+
+	return
+
 }

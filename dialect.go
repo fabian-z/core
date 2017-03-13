@@ -228,7 +228,8 @@ func (db *Base) SupportForeignKeys() bool {
 
 func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) string {
 	quote := db.dialect.Quote
-	constraintName := quote("FK_" + tableName + "_" + foreignKey.ColumnName[0])
+	_, constraintNameUnquoted := foreignKey.Name(tableName)
+	constraintName := quote(constraintNameUnquoted)
 
 	var fkColLocQuoted string
 	for _, v := range foreignKey.ColumnName {
@@ -264,8 +265,8 @@ func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) st
 
 func (db *Base) DropForeignKeySql(tableName string, foreignKey *ForeignKey) string {
 	quote := db.dialect.Quote
-	constraintName := quote("FK_" + tableName + "_" + foreignKey.ColumnName[0])
-	return fmt.Sprintf("ALTER TABLE %s DROP FOREIGN KEY %s;", quote(tableName), constraintName)
+	_, constraintName := foreignKey.Name(tableName)
+	return fmt.Sprintf("ALTER TABLE %s DROP FOREIGN KEY %s;", quote(tableName), quote(constraintName))
 }
 
 func (db *Base) ModifyColumnSql(tableName string, col *Column) string {
