@@ -232,13 +232,13 @@ func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) st
 
 	var fkColLocQuoted string
 	for _, v := range foreignKey.ColumnName {
-		fkColLocQuoted = quote(v) + ", "
+		fkColLocQuoted += quote(v) + ", "
 	}
 	fkColLocQuoted = strings.TrimSuffix(fkColLocQuoted, ", ")
 
 	var fkColName string
 	for _, v := range foreignKey.TargetColumn {
-		fkColName = quote(v) + ", "
+		fkColName += quote(v) + ", "
 	}
 	fkColName = strings.TrimSuffix(fkColName, ", ")
 
