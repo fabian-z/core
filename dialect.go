@@ -49,6 +49,7 @@ type Dialect interface {
 	SupportEngine() bool
 	SupportCharset() bool
 	SupportDropIfExists() bool
+	SupportForeignKeys() bool
 	IndexOnTable() bool
 	ShowCreateNull() bool
 
@@ -219,6 +220,10 @@ func (db *Base) DropIndexSql(tableName string, index *Index) string {
 		name = index.Name
 	}
 	return fmt.Sprintf("DROP INDEX %v ON %s", quote(name), quote(tableName))
+}
+
+func (db *Base) SupportForeignKeys() bool {
+	return true
 }
 
 func (db *Base) CreateForeignKeySql(tableName string, foreignKey *ForeignKey) string {
