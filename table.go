@@ -150,11 +150,3 @@ func (table *Table) AddColumn(col *Column) {
 func (table *Table) AddIndex(index *Index) {
 	table.Indexes[index.Name] = index
 }
-
-type ForeignKey struct {
-	ColumnName   []string
-	TargetTable  string
-	TargetColumn []string
-	UpdateAction string
-	DeleteAction string
-}

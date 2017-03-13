@@ -22,7 +22,7 @@ type Index struct {
 func (index *Index) XName(tableName string) string {
 	if !strings.HasPrefix(index.Name, "UQE_") &&
 		!strings.HasPrefix(index.Name, "IDX_") &&
-		!strings.HasPrefix(index.Name, "FK_") {
+		!strings.HasPrefix(index.Name, "FK_IDX_") {
 		if index.Type == UniqueType {
 			return fmt.Sprintf("UQE_%v_%v", tableName, index.Name)
 		}
